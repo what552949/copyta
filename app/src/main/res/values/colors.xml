@@ -1,0 +1,5 @@
+<resources>
+    <color name="toolbar_bg">#F2F2F7</color>
+    <color name="accent_dark">#1C1C1E</color>
+    <color name="tick_text">#8E8E93</color>
+</resources>
