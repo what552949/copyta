@@ -1,0 +1,38 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 底层纸张（稍偏移） -->
+    <path
+        android:fillColor="#D8D8D8"
+        android:pathData="M30,34 L78,34 L78,82 L30,82 Z" />
+
+    <!-- 前景纸张 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M26,26 L74,26 L74,74 L26,74 Z" />
+    <path
+        android:strokeColor="#333333"
+        android:strokeWidth="2"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M26,26 L74,26 L74,74 L26,74 Z" />
+
+    <!-- 纸张上的线稿 -->
+    <path
+        android:strokeColor="#333333"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M36,40 L64,40" />
+    <path
+        android:strokeColor="#333333"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M36,50 L64,50" />
+    <path
+        android:strokeColor="#333333"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M36,60 L54,60" />
+</vector>
