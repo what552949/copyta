@@ -1,5 +1,6 @@
 package com.copyta.app
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -36,10 +37,11 @@ class TracingView @JvmOverloads constructor(
     private var lastTouchY = 0f
     private var lastDistance = 0f
 
-    var onScaleChanged: ((Float) -> Unit)? = null
+    // 双指缩放范围扩大到 0.1x ~ 5.0x
+    private val minScale = 0.1f
+    private val maxScale = 5.0f
 
-    private val minScale = 0.5f
-    private val maxScale = 3f
+    private var scaleAnimator: ValueAnimator? = null
 
     fun setBitmap(bmp: Bitmap) {
         bitmap = bmp
@@ -56,7 +58,6 @@ class TracingView @JvmOverloads constructor(
             computeBase()
             updateMatrix()
             invalidate()
-            onScaleChanged?.invoke(userScale)
         }
     }
 
@@ -93,13 +94,31 @@ class TracingView @JvmOverloads constructor(
         updateMatrix()
     }
 
-    fun setUserScale(scale: Float) {
+    /**
+     * 滑块绝对接管：带动画平滑缩放。
+     */
+    fun setScaleAnimated(targetScale: Float) {
+        val s = targetScale.coerceIn(0.5f, 3.0f) // 滑块范围最大 3.0x
+        scaleAnimator?.cancel()
+        scaleAnimator = ValueAnimator.ofFloat(userScale, s).apply {
+            duration = 200
+            addUpdateListener { animation ->
+                userScale = animation.animatedValue as Float
+                updateMatrix()
+                invalidate()
+            }
+            start()
+        }
+    }
+
+    /**
+     * 双指缩放时使用，无动画，直接赋值。
+     */
+    fun setScaleDirect(scale: Float) {
         userScale = scale.coerceIn(minScale, maxScale)
         updateMatrix()
         invalidate()
     }
-
-    fun getUserScale(): Float = userScale
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (locked) return false
@@ -115,6 +134,7 @@ class TracingView @JvmOverloads constructor(
             }
             MotionEvent.ACTION_MOVE -> {
                 if (event.pointerCount == 1) {
+                    // 单指拖动
                     val dx = event.x - lastTouchX
                     val dy = event.y - lastTouchY
                     transX += dx
@@ -124,11 +144,11 @@ class TracingView @JvmOverloads constructor(
                     updateMatrix()
                     invalidate()
                 } else if (event.pointerCount >= 2) {
+                    // 双指缩放（平滑、无步进）
                     val d = distance(event)
                     if (lastDistance > 0f) {
                         val ratio = d / lastDistance
                         userScale = (userScale * ratio).coerceIn(minScale, maxScale)
-                        onScaleChanged?.invoke(userScale)
                         updateMatrix()
                         invalidate()
                     }
