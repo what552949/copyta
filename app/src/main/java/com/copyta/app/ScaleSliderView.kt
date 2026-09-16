@@ -4,11 +4,9 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
-import kotlin.math.abs
 import kotlin.math.roundToInt
 
 class ScaleSliderView @JvmOverloads constructor(
@@ -78,14 +76,16 @@ class ScaleSliderView @JvmOverloads constructor(
     // 内边距（防止滑块画出边界）
     private val paddingLeftRight = 40f
 
+    // 供外部（横屏时）调用切换横竖
     fun setOrientation(vertical: Boolean) {
         isVertical = vertical
-        requestLayout()
+        invalidate()
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        updateThumbPosition()
+        // 尺寸改变时，只需要触发重绘，坐标在 onDraw 里动态计算
+        invalidate()
     }
 
     private fun snapToStep(value: Int): Int {
@@ -95,7 +95,7 @@ class ScaleSliderView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        
+
         // 计算滑块可用的起始和结束长度
         val trackStart: Float
         val trackEnd: Float
@@ -124,7 +124,7 @@ class ScaleSliderView @JvmOverloads constructor(
         for (i in 0..totalSteps) {
             val value = minValue + i * stepSize
             val ratio = (value - minValue).toFloat() / (maxValue - minValue)
-            
+
             if (!isVertical) {
                 val x = trackStart + trackLength * ratio
                 if (value % 50 == 0) {
@@ -142,7 +142,7 @@ class ScaleSliderView @JvmOverloads constructor(
                 if (value % 50 == 0) {
                     // 大刻度
                     canvas.drawLine(width / 2f + 20f, y, width / 2f + 40f, y, tickMajorPaint)
-                    // 文字（竖向文字绘制比较麻烦，这里采用横向绘制并平移位置）
+                    // 文字
                     val label = String.format("%.1fx", value / 100f)
                     canvas.save()
                     canvas.translate(width / 2f + 65f, y + 10f)
@@ -179,7 +179,7 @@ class ScaleSliderView @JvmOverloads constructor(
 
                 val touchPos = if (!isVertical) event.x else event.y
                 val ratio = ((touchPos - trackStart) / trackLength).coerceIn(0f, 1f)
-                
+
                 val rawValue = (minValue + ratio * (maxValue - minValue)).roundToInt()
                 progress = snapToStep(rawValue)
                 return true
@@ -191,7 +191,7 @@ class ScaleSliderView @JvmOverloads constructor(
         }
         return super.onTouchEvent(event)
     }
-    
+
     // 用于外部重置
     fun resetToCenter() {
         progress = 100
