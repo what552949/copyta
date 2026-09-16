@@ -33,6 +33,7 @@ class VerticalSeekBar @JvmOverloads constructor(
             MotionEvent.ACTION_DOWN,
             MotionEvent.ACTION_MOVE,
             MotionEvent.ACTION_UP -> {
+                // 修复：这里应该除以 height，而不是 width
                 progress = max - (max * event.y / height).toInt()
                 onSizeChanged(width, height, 0, 0)
                 return true
