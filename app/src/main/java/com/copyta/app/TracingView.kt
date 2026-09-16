@@ -43,6 +43,12 @@ class TracingView @JvmOverloads constructor(
 
     fun setBitmap(bmp: Bitmap) {
         bitmap = bmp
+        reset()
+    }
+
+    fun getBitmap(): Bitmap? = bitmap
+
+    fun reset() {
         userScale = 1f
         transX = 0f
         transY = 0f
@@ -53,8 +59,6 @@ class TracingView @JvmOverloads constructor(
             onScaleChanged?.invoke(userScale)
         }
     }
-
-    fun getBitmap(): Bitmap? = bitmap
 
     private fun computeBase() {
         val bmp = bitmap ?: return
