@@ -45,6 +45,7 @@ class MainActivity : AppCompatActivity() {
         setupToolbar()
         setupLockButtons()
         setupBackHandler()
+        updateOrientation() // 初始化方向
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -56,12 +57,18 @@ class MainActivity : AppCompatActivity() {
         bindViews()
         setupToolbar()
         setupLockButtons()
+        updateOrientation() // 横竖屏切换时重新设置方向
 
         b?.let { tracingView.setBitmap(it) }
         tracingView.setScaleDirect(1f)
         scaleSlider.progress = 100
 
         if (wasLocked) applyLockedState() else applyUnlockedState()
+    }
+
+    private fun updateOrientation() {
+        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        scaleSlider.setOrientation(isLandscape)
     }
 
     private fun bindViews() {
@@ -87,7 +94,6 @@ class MainActivity : AppCompatActivity() {
         colorWhite.setOnClickListener { tracingView.setBackgroundColor(Color.WHITE) }
         colorBlack.setOnClickListener { tracingView.setBackgroundColor(Color.BLACK) }
 
-        // 滑块绝对接管缩放（200ms平滑动画）
         scaleSlider.onValueChanged = { value ->
             tracingView.setScaleAnimated(value / 100f)
         }
