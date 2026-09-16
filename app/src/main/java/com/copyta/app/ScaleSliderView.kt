@@ -47,12 +47,6 @@ class ScaleSliderView @JvmOverloads constructor(
         style = Paint.Style.FILL
     }
 
-    private val thumbStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.WHITE
-        style = Paint.Style.STROKE
-        strokeWidth = 4f
-    }
-
     private val tickMajorPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = 0xFF1C1C1E.toInt()
         strokeWidth = 4f
@@ -76,7 +70,7 @@ class ScaleSliderView @JvmOverloads constructor(
     // 内边距（防止滑块画出边界）
     private val paddingLeftRight = 40f
 
-    // 供外部（横屏时）调用切换横竖
+    // 供外部调用切换横竖
     fun setOrientation(vertical: Boolean) {
         isVertical = vertical
         invalidate()
@@ -84,7 +78,6 @@ class ScaleSliderView @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        // 尺寸改变时，只需要触发重绘，坐标在 onDraw 里动态计算
         invalidate()
     }
 
@@ -96,90 +89,87 @@ class ScaleSliderView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        // 计算滑块可用的起始和结束长度
-        val trackStart: Float
-        val trackEnd: Float
-        val trackLength: Float
-
-        if (!isVertical) {
-            trackStart = paddingLeftRight
-            trackEnd = width - paddingLeftRight
-            trackLength = trackEnd - trackStart
-        } else {
-            trackStart = paddingLeftRight
-            trackEnd = height - paddingLeftRight
-            trackLength = trackEnd - trackStart
-        }
-
         val totalSteps = (maxValue - minValue) / stepSize
 
-        // 1. 画轨道
         if (!isVertical) {
-            canvas.drawLine(trackStart, height / 2f, trackEnd, height / 2f, trackPaint)
-        } else {
-            canvas.drawLine(width / 2f, trackStart, width / 2f, trackEnd, trackPaint)
-        }
+            // ================= 横向布局 =================
+            // 把轨道放在偏下的位置，给文字留出上方空间
+            val trackY = height * 0.7f
+            val trackStart = paddingLeftRight
+            val trackEnd = width - paddingLeftRight
+            val trackLength = trackEnd - trackStart
 
-        // 2. 画刻度和数字
-        for (i in 0..totalSteps) {
-            val value = minValue + i * stepSize
-            val ratio = (value - minValue).toFloat() / (maxValue - minValue)
+            // 1. 轨道
+            canvas.drawLine(trackStart, trackY, trackEnd, trackY, trackPaint)
 
-            if (!isVertical) {
-                val x = trackStart + trackLength * ratio
+            // 2. 刻度
+            for (i in 0..totalSteps) {
+                val value = minValue + i * stepSize
+                val x = trackStart + trackLength * ((value - minValue).toFloat() / (maxValue - minValue))
+
                 if (value % 50 == 0) {
                     // 大刻度
-                    canvas.drawLine(x, height / 2f - 20f, x, height / 2f - 40f, tickMajorPaint)
-                    // 文字
+                    canvas.drawLine(x, trackY - 15f, x, trackY - 35f, tickMajorPaint)
                     val label = String.format("%.1fx", value / 100f)
-                    canvas.drawText(label, x, height / 2f - 50f, textPaint)
+                    canvas.drawText(label, x, trackY - 45f, textPaint)
                 } else {
                     // 小刻度
-                    canvas.drawLine(x, height / 2f - 20f, x, height / 2f - 30f, tickMinorPaint)
+                    canvas.drawLine(x, trackY - 15f, x, trackY - 25f, tickMinorPaint)
                 }
-            } else {
-                val y = trackStart + trackLength * ratio
+            }
+
+            // 3. 滑块（去掉了白色描边，只画黑色圆点）
+            currentThumbX = trackStart + trackLength * ((progress - minValue).toFloat() / (maxValue - minValue))
+            currentThumbY = trackY
+            canvas.drawCircle(currentThumbX, currentThumbY, thumbRadius, thumbPaint)
+
+        } else {
+            // ================= 竖向布局 =================
+            // 把轨道放在偏左的位置，给右侧文字留出空间
+            val trackX = width * 0.4f
+            val trackStart = paddingLeftRight
+            val trackEnd = height - paddingLeftRight
+            val trackLength = trackEnd - trackStart
+
+            // 1. 轨道
+            canvas.drawLine(trackX, trackStart, trackX, trackEnd, trackPaint)
+
+            // 2. 刻度
+            for (i in 0..totalSteps) {
+                val value = minValue + i * stepSize
+                val y = trackStart + trackLength * ((value - minValue).toFloat() / (maxValue - minValue))
+
                 if (value % 50 == 0) {
                     // 大刻度
-                    canvas.drawLine(width / 2f + 20f, y, width / 2f + 40f, y, tickMajorPaint)
-                    // 文字
+                    canvas.drawLine(trackX + 15f, y, trackX + 35f, y, tickMajorPaint)
                     val label = String.format("%.1fx", value / 100f)
                     canvas.save()
-                    canvas.translate(width / 2f + 65f, y + 10f)
+                    canvas.translate(trackX + 60f, y + 10f)
                     canvas.drawText(label, 0f, 0f, textPaint)
                     canvas.restore()
                 } else {
                     // 小刻度
-                    canvas.drawLine(width / 2f + 20f, y, width / 2f + 30f, y, tickMinorPaint)
+                    canvas.drawLine(trackX + 15f, y, trackX + 25f, y, tickMinorPaint)
                 }
             }
-        }
 
-        // 3. 画滑块（Thumb）
-        if (!isVertical) {
-            currentThumbX = trackStart + trackLength * ((progress - minValue).toFloat() / (maxValue - minValue))
-            currentThumbY = height / 2f
-            canvas.drawCircle(currentThumbX, currentThumbY, thumbRadius, thumbPaint)
-            canvas.drawCircle(currentThumbX, currentThumbY, thumbRadius, thumbStrokePaint)
-        } else {
-            currentThumbX = width / 2f
+            // 3. 滑块
+            currentThumbX = trackX
             currentThumbY = trackStart + trackLength * ((progress - minValue).toFloat() / (maxValue - minValue))
             canvas.drawCircle(currentThumbX, currentThumbY, thumbRadius, thumbPaint)
-            canvas.drawCircle(currentThumbX, currentThumbY, thumbRadius, thumbStrokePaint)
         }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
-                parent.requestDisallowInterceptTouchEvent(true) // 防止被外层工具栏拦截
+                parent.requestDisallowInterceptTouchEvent(true)
                 val trackStart = paddingLeftRight
                 val trackEnd = if (!isVertical) width - paddingLeftRight else height - paddingLeftRight
                 val trackLength = trackEnd - trackStart
 
                 val touchPos = if (!isVertical) event.x else event.y
                 val ratio = ((touchPos - trackStart) / trackLength).coerceIn(0f, 1f)
-
                 val rawValue = (minValue + ratio * (maxValue - minValue)).roundToInt()
                 progress = snapToStep(rawValue)
                 return true
@@ -192,7 +182,6 @@ class ScaleSliderView @JvmOverloads constructor(
         return super.onTouchEvent(event)
     }
 
-    // 用于外部重置
     fun resetToCenter() {
         progress = 100
     }
