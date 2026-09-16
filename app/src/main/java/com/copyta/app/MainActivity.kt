@@ -207,7 +207,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupBackHandler() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun onHandleOnBackPressed() {
+            override fun handleOnBackPressed() {
                 if (!isLocked) {
                     isEnabled = false
                     onBackPressedDispatcher.onBackPressed()
