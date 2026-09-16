@@ -4,13 +4,11 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
-    <!-- 底层：图片 -->
     <com.copyta.app.TracingView
         android:id="@+id/tracingView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- 中层：工具栏（加了 clickable 拦截穿透） -->
     <LinearLayout
         android:id="@+id/toolbar"
         android:layout_width="96dp"
@@ -42,7 +40,6 @@
             android:insetTop="0dp"
             android:insetBottom="0dp" />
 
-        <!-- 复位按钮 -->
         <Button
             android:id="@+id/resetButton"
             android:layout_width="wrap_content"
@@ -60,42 +57,36 @@
             android:insetTop="0dp"
             android:insetBottom="0dp" />
 
-        <LinearLayout
+        <!-- 竖向滑块区域 -->
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="14dp">
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp">
+
+            <com.copyta.app.RulerView
+                android:id="@+id/rulerView"
+                android:layout_width="30dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:visibility="gone" />
 
             <com.copyta.app.VerticalSeekBar
                 android:id="@+id/scaleSeekBar"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
                 android:min="50"
                 android:max="300"
+                android:stepSize="10"
                 android:progress="100"
                 android:progressDrawable="@drawable/seekbar_progress"
                 android:thumb="@drawable/seekbar_thumb" />
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:layout_marginStart="4dp"
-                android:gravity="center_vertical">
-
-                <TextView style="@style/TickVertical" android:text="3x" />
-                <TextView style="@style/TickVertical" android:text="2.5x" />
-                <TextView style="@style/TickVertical" android:text="2x" />
-                <TextView style="@style/TickVertical" android:text="1.5x" />
-                <TextView style="@style/TickVertical" android:text="1x" />
-                <TextView style="@style/TickVertical" android:text="0.5x" />
-
-            </LinearLayout>
-
-        </LinearLayout>
+        </FrameLayout>
 
         <View
             android:id="@+id/colorWhite"
@@ -110,7 +101,6 @@
             android:layout_marginTop="8dp"
             android:background="@drawable/bg_swatch_black" />
 
-        <!-- 锁定按钮 -->
         <ImageButton
             android:id="@+id/lockButton"
             android:layout_width="36dp"
@@ -124,7 +114,6 @@
 
     </LinearLayout>
 
-    <!-- 顶层：浮动解锁按钮（默认隐藏，锁定后出现在左下角） -->
     <ImageButton
         android:id="@+id/floatingUnlockButton"
         android:layout_width="48dp"
