@@ -4,13 +4,11 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
-    <!-- 底层：图片 -->
     <com.copyta.app.TracingView
         android:id="@+id/tracingView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- 中层：工具栏（加了 clickable 拦截穿透） -->
     <LinearLayout
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -25,6 +23,32 @@
         android:clickable="true"
         android:focusable="true">
 
+        <!-- 滑块区域（上方） -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp">
+
+            <com.copyta.app.RulerView
+                android:id="@+id/rulerView"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_marginTop="14dp" />
+
+            <SeekBar
+                android:id="@+id/scaleSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:min="50"
+                android:max="300"
+                android:stepSize="10"
+                android:progress="100"
+                android:progressDrawable="@drawable/seekbar_progress"
+                android:thumb="@drawable/seekbar_thumb" />
+        </FrameLayout>
+
+        <!-- 按钮行（下方） -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -47,7 +71,6 @@
                 android:insetTop="0dp"
                 android:insetBottom="0dp" />
 
-            <!-- 复位按钮 -->
             <Button
                 android:id="@+id/resetButton"
                 android:layout_width="wrap_content"
@@ -83,7 +106,6 @@
                 android:layout_marginStart="8dp"
                 android:background="@drawable/bg_swatch_black" />
 
-            <!-- 锁定按钮（闭合锁图标，点击一次锁定） -->
             <ImageButton
                 android:id="@+id/lockButton"
                 android:layout_width="36dp"
@@ -97,41 +119,8 @@
 
         </LinearLayout>
 
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView style="@style/Tick" android:text="0.5x" />
-                <TextView style="@style/Tick" android:text="1x" />
-                <TextView style="@style/Tick" android:text="1.5x" />
-                <TextView style="@style/Tick" android:text="2x" />
-                <TextView style="@style/Tick" android:text="2.5x" />
-                <TextView style="@style/Tick" android:text="3x" />
-
-            </LinearLayout>
-
-            <SeekBar
-                android:id="@+id/scaleSeekBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:min="50"
-                android:max="300"
-                android:progress="100"
-                android:progressDrawable="@drawable/seekbar_progress"
-                android:thumb="@drawable/seekbar_thumb" />
-
-        </FrameLayout>
-
     </LinearLayout>
 
-    <!-- 顶层：浮动解锁按钮（默认隐藏，锁定后出现在右下角） -->
     <ImageButton
         android:id="@+id/floatingUnlockButton"
         android:layout_width="48dp"
