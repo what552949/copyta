@@ -18,37 +18,17 @@
         android:background="#F2F2F7"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="14dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
         android:clickable="true"
         android:focusable="true">
 
-        <!-- 滑块区域（上方） -->
-        <FrameLayout
+        <com.copyta.app.ScaleSliderView
+            android:id="@+id/scaleSlider"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp">
+            android:layout_height="80dp"
+            android:layout_marginBottom="16dp" />
 
-            <com.copyta.app.RulerView
-                android:id="@+id/rulerView"
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:layout_marginTop="14dp" />
-
-            <SeekBar
-                android:id="@+id/scaleSeekBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:min="50"
-                android:max="300"
-                android:stepSize="10"
-                android:progress="100"
-                android:progressDrawable="@drawable/seekbar_progress"
-                android:thumb="@drawable/seekbar_thumb" />
-        </FrameLayout>
-
-        <!-- 按钮行（下方） -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
