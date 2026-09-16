@@ -1,7 +1,6 @@
 package com.copyta.app
 
 import android.content.res.Configuration
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.net.Uri
@@ -29,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var colorWhite: View
     private lateinit var colorBlack: View
     private lateinit var scaleSeekBar: SeekBar
+    private lateinit var rulerView: RulerView
     private lateinit var lockButton: ImageButton
     private lateinit var floatingUnlockButton: ImageButton
 
@@ -51,7 +51,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val s = tracingView.getUserScale()
         val b = tracingView.getBitmap()
         val wasLocked = isLocked
 
@@ -61,13 +60,10 @@ class MainActivity : AppCompatActivity() {
         setupLockButtons()
 
         b?.let { tracingView.setBitmap(it) }
-        tracingView.setUserScale(s)
+        tracingView.setScaleDirect(1f) // 旋转屏幕后，图片尺寸重置为初始状态
+        scaleSeekBar.progress = 100
 
-        if (wasLocked) {
-            applyLockedState()
-        } else {
-            applyUnlockedState()
-        }
+        if (wasLocked) applyLockedState() else applyUnlockedState()
     }
 
     private fun bindViews() {
@@ -78,6 +74,7 @@ class MainActivity : AppCompatActivity() {
         colorWhite = findViewById(R.id.colorWhite)
         colorBlack = findViewById(R.id.colorBlack)
         scaleSeekBar = findViewById(R.id.scaleSeekBar)
+        rulerView = findViewById(R.id.rulerView)
         lockButton = findViewById(R.id.lockButton)
         floatingUnlockButton = findViewById(R.id.floatingUnlockButton)
     }
@@ -93,26 +90,22 @@ class MainActivity : AppCompatActivity() {
         colorWhite.setOnClickListener { tracingView.setBackgroundColor(Color.WHITE) }
         colorBlack.setOnClickListener { tracingView.setBackgroundColor(Color.BLACK) }
 
-        // 取消了吸附逻辑，滑块自由滑动
+        // 滑块重写：启用步进吸附，绝对接管缩放，取消联动
         scaleSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
-                if (fromUser) tracingView.setUserScale(p / 100f)
+                if (fromUser) {
+                    // 实时同步给 TracingView（因为 p 是 0.1 倍数的整数，所以自带卡顿感）
+                    tracingView.setScaleDirect(p / 100f)
+                }
             }
             override fun onStartTrackingTouch(sb: SeekBar) {}
             override fun onStopTrackingTouch(sb: SeekBar) {}
         })
-
-        tracingView.onScaleChanged = { s ->
-            val p = (s * 100).toInt().coerceIn(10, 300)
-            if (scaleSeekBar.progress != p) scaleSeekBar.progress = p
-        }
     }
 
     private fun setupLockButtons() {
         // 工具栏里的锁定按钮：点击一次直接锁定
-        lockButton.setOnClickListener {
-            lock()
-        }
+        lockButton.setOnClickListener { lock() }
 
         // 浮动解锁按钮：可拖动 + 双击解锁
         floatingUnlockButton.setOnTouchListener(object : View.OnTouchListener {
@@ -180,8 +173,6 @@ class MainActivity : AppCompatActivity() {
         tracingView.locked = true
         toolbar.visibility = View.GONE
         floatingUnlockButton.visibility = View.VISIBLE
-        // 把浮动按钮重置回固定的左下角/右下角初始位置（根据布局决定）
-        // 这里因为是重新setContentView，所以它会自动出现在XML里定义好的角落
     }
 
     private fun applyUnlockedState() {
@@ -192,7 +183,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun enterImmersive() {
-        // 强化沉浸式全屏，尽力阻止下拉通知栏
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         @Suppress("DEPRECATION")
         window.decorView.systemUiVisibility = (
@@ -217,7 +207,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupBackHandler() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
+            override fun onHandleOnBackPressed() {
                 if (!isLocked) {
                     isEnabled = false
                     onBackPressedDispatcher.onBackPressed()
@@ -239,6 +229,7 @@ class MainActivity : AppCompatActivity() {
                     return
                 }
                 tracingView.setBitmap(bmp)
+                scaleSeekBar.progress = 100 // 载入后滑块重置回 1x
             }
         } catch (e: Exception) {
             Toast.makeText(this, "载入失败: ${e.message}", Toast.LENGTH_SHORT).show()
