@@ -4,11 +4,13 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
+    <!-- 底层：图片 -->
     <com.copyta.app.TracingView
         android:id="@+id/tracingView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!-- 中层：工具栏（加了 clickable 拦截穿透） -->
     <LinearLayout
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -19,7 +21,9 @@
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
         android:paddingTop="10dp"
-        android:paddingBottom="14dp">
+        android:paddingBottom="14dp"
+        android:clickable="true"
+        android:focusable="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -31,11 +35,29 @@
                 android:id="@+id/loadButton"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
-                android:text="载入图片"
+                android:text="@string/load_image"
                 android:textSize="12sp"
                 android:textAllCaps="false"
                 android:background="@drawable/bg_load_button"
                 android:textColor="#FFFFFF"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp" />
+
+            <!-- 复位按钮 -->
+            <Button
+                android:id="@+id/resetButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:text="@string/reset"
+                android:textSize="12sp"
+                android:textAllCaps="false"
+                android:background="@drawable/bg_reset_button"
+                android:textColor="#1C1C1E"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:minWidth="0dp"
@@ -61,6 +83,7 @@
                 android:layout_marginStart="8dp"
                 android:background="@drawable/bg_swatch_black" />
 
+            <!-- 锁定按钮（闭合锁图标，点击一次锁定） -->
             <ImageButton
                 android:id="@+id/lockButton"
                 android:layout_width="36dp"
@@ -68,8 +91,9 @@
                 android:layout_marginStart="10dp"
                 android:background="@drawable/bg_lock_button"
                 android:scaleType="centerInside"
-                android:padding="10dp"
-                android:contentDescription="锁定" />
+                android:padding="8dp"
+                android:src="@drawable/ic_lock_closed"
+                android:contentDescription="@string/lock" />
 
         </LinearLayout>
 
@@ -106,5 +130,20 @@
         </FrameLayout>
 
     </LinearLayout>
+
+    <!-- 顶层：浮动解锁按钮（默认隐藏，锁定后出现在右下角） -->
+    <ImageButton
+        android:id="@+id/floatingUnlockButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_lock_button"
+        android:scaleType="centerInside"
+        android:padding="12dp"
+        android:src="@drawable/ic_lock_open"
+        android:visibility="gone"
+        android:contentDescription="@string/unlock" />
 
 </FrameLayout>
