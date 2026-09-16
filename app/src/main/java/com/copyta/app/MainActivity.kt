@@ -9,7 +9,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.ImageButton
-import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,8 +26,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var resetButton: View
     private lateinit var colorWhite: View
     private lateinit var colorBlack: View
-    private lateinit var scaleSeekBar: SeekBar
-    private lateinit var rulerView: RulerView
+    private lateinit var scaleSlider: ScaleSliderView
     private lateinit var lockButton: ImageButton
     private lateinit var floatingUnlockButton: ImageButton
 
@@ -60,8 +58,8 @@ class MainActivity : AppCompatActivity() {
         setupLockButtons()
 
         b?.let { tracingView.setBitmap(it) }
-        tracingView.setScaleDirect(1f) // 旋转屏幕后，图片尺寸重置为初始状态
-        scaleSeekBar.progress = 100
+        tracingView.setScaleDirect(1f)
+        scaleSlider.progress = 100
 
         if (wasLocked) applyLockedState() else applyUnlockedState()
     }
@@ -73,8 +71,7 @@ class MainActivity : AppCompatActivity() {
         resetButton = findViewById(R.id.resetButton)
         colorWhite = findViewById(R.id.colorWhite)
         colorBlack = findViewById(R.id.colorBlack)
-        scaleSeekBar = findViewById(R.id.scaleSeekBar)
-        rulerView = findViewById(R.id.rulerView)
+        scaleSlider = findViewById(R.id.scaleSlider)
         lockButton = findViewById(R.id.lockButton)
         floatingUnlockButton = findViewById(R.id.floatingUnlockButton)
     }
@@ -84,30 +81,21 @@ class MainActivity : AppCompatActivity() {
 
         resetButton.setOnClickListener {
             tracingView.reset()
-            scaleSeekBar.progress = 100
+            scaleSlider.progress = 100
         }
 
         colorWhite.setOnClickListener { tracingView.setBackgroundColor(Color.WHITE) }
         colorBlack.setOnClickListener { tracingView.setBackgroundColor(Color.BLACK) }
 
-        // 滑块重写：启用步进吸附，绝对接管缩放，取消联动
-        scaleSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    // 实时同步给 TracingView（因为 p 是 0.1 倍数的整数，所以自带卡顿感）
-                    tracingView.setScaleDirect(p / 100f)
-                }
-            }
-            override fun onStartTrackingTouch(sb: SeekBar) {}
-            override fun onStopTrackingTouch(sb: SeekBar) {}
-        })
+        // 滑块绝对接管缩放（200ms平滑动画）
+        scaleSlider.onValueChanged = { value ->
+            tracingView.setScaleAnimated(value / 100f)
+        }
     }
 
     private fun setupLockButtons() {
-        // 工具栏里的锁定按钮：点击一次直接锁定
         lockButton.setOnClickListener { lock() }
 
-        // 浮动解锁按钮：可拖动 + 双击解锁
         floatingUnlockButton.setOnTouchListener(object : View.OnTouchListener {
             private var startX = 0f
             private var startY = 0f
@@ -193,8 +181,7 @@ class MainActivity : AppCompatActivity() {
         )
         val c = WindowInsetsControllerCompat(window, window.decorView)
         c.hide(WindowInsetsCompat.Type.systemBars())
-        c.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        c.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
     private fun exitImmersive() {
@@ -229,7 +216,7 @@ class MainActivity : AppCompatActivity() {
                     return
                 }
                 tracingView.setBitmap(bmp)
-                scaleSeekBar.progress = 100 // 载入后滑块重置回 1x
+                scaleSlider.progress = 100
             }
         } catch (e: Exception) {
             Toast.makeText(this, "载入失败: ${e.message}", Toast.LENGTH_SHORT).show()
