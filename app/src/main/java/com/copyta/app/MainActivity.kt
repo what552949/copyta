@@ -25,13 +25,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tracingView: TracingView
     private lateinit var toolbar: View
     private lateinit var loadButton: View
+    private lateinit var resetButton: View
     private lateinit var colorWhite: View
     private lateinit var colorBlack: View
     private lateinit var scaleSeekBar: SeekBar
     private lateinit var lockButton: ImageButton
+    private lateinit var floatingUnlockButton: ImageButton
 
     private var isLocked = false
-    private var lastTapTime = 0L
 
     private val pickImage = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -44,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         bindViews()
         setupToolbar()
-        setupLockButton()
+        setupLockButtons()
         setupBackHandler()
     }
 
@@ -57,40 +58,48 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         bindViews()
         setupToolbar()
-        setupLockButton()
+        setupLockButtons()
 
         b?.let { tracingView.setBitmap(it) }
         tracingView.setUserScale(s)
-        if (wasLocked) applyLockedState() else applyUnlockedState()
+
+        if (wasLocked) {
+            applyLockedState()
+        } else {
+            applyUnlockedState()
+        }
     }
 
     private fun bindViews() {
         tracingView = findViewById(R.id.tracingView)
         toolbar = findViewById(R.id.toolbar)
         loadButton = findViewById(R.id.loadButton)
+        resetButton = findViewById(R.id.resetButton)
         colorWhite = findViewById(R.id.colorWhite)
         colorBlack = findViewById(R.id.colorBlack)
         scaleSeekBar = findViewById(R.id.scaleSeekBar)
         lockButton = findViewById(R.id.lockButton)
+        floatingUnlockButton = findViewById(R.id.floatingUnlockButton)
     }
 
     private fun setupToolbar() {
         loadButton.setOnClickListener { pickImage.launch("image/*") }
 
+        resetButton.setOnClickListener {
+            tracingView.reset()
+            scaleSeekBar.progress = 100
+        }
+
         colorWhite.setOnClickListener { tracingView.setBackgroundColor(Color.WHITE) }
         colorBlack.setOnClickListener { tracingView.setBackgroundColor(Color.BLACK) }
 
+        // 取消了吸附逻辑，滑块自由滑动
         scaleSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean) {
                 if (fromUser) tracingView.setUserScale(p / 100f)
             }
             override fun onStartTrackingTouch(sb: SeekBar) {}
-            override fun onStopTrackingTouch(sb: SeekBar) {
-                val scale = sb.progress / 100f
-                val snapped = snapToScale(scale)
-                sb.progress = (snapped * 100).toInt()
-                tracingView.setUserScale(snapped)
-            }
+            override fun onStopTrackingTouch(sb: SeekBar) {}
         })
 
         tracingView.onScaleChanged = { s ->
@@ -99,24 +108,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun snapToScale(s: Float): Float {
-        val points = floatArrayOf(0.5f, 1f, 1.5f, 2f, 2.5f, 3f)
-        var best = points[0]
-        var bestD = Float.MAX_VALUE
-        for (p in points) {
-            val d = abs(p - s)
-            if (d < bestD) { bestD = d; best = p }
+    private fun setupLockButtons() {
+        // 工具栏里的锁定按钮：点击一次直接锁定
+        lockButton.setOnClickListener {
+            lock()
         }
-        return best
-    }
 
-    private fun setupLockButton() {
-        lockButton.setOnTouchListener(object : View.OnTouchListener {
+        // 浮动解锁按钮：可拖动 + 双击解锁
+        floatingUnlockButton.setOnTouchListener(object : View.OnTouchListener {
             private var startX = 0f
             private var startY = 0f
             private var startTouchX = 0f
             private var startTouchY = 0f
             private var isDragging = false
+            private var lastTapTime = 0L
 
             override fun onTouch(v: View, event: MotionEvent): Boolean {
                 when (event.actionMasked) {
@@ -139,27 +144,21 @@ class MainActivity : AppCompatActivity() {
                         return true
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        if (!isDragging) handleLockButtonTap()
+                        if (!isDragging) {
+                            val now = System.currentTimeMillis()
+                            if (now - lastTapTime < 1000) {
+                                lastTapTime = 0L
+                                unlock()
+                            } else {
+                                lastTapTime = now
+                            }
+                        }
                         return true
                     }
                 }
                 return false
             }
         })
-    }
-
-    private fun handleLockButtonTap() {
-        val now = System.currentTimeMillis()
-        if (isLocked) {
-            if (now - lastTapTime < 1000) {
-                lastTapTime = 0L
-                unlock()
-            } else {
-                lastTapTime = now
-            }
-        } else {
-            lock()
-        }
     }
 
     private fun lock() {
@@ -180,17 +179,28 @@ class MainActivity : AppCompatActivity() {
         isLocked = true
         tracingView.locked = true
         toolbar.visibility = View.GONE
-        lockButton.setImageResource(R.drawable.ic_lock_x)
+        floatingUnlockButton.visibility = View.VISIBLE
+        // 把浮动按钮重置回固定的左下角/右下角初始位置（根据布局决定）
+        // 这里因为是重新setContentView，所以它会自动出现在XML里定义好的角落
     }
 
     private fun applyUnlockedState() {
         isLocked = false
         tracingView.locked = false
         toolbar.visibility = View.VISIBLE
-        lockButton.setImageResource(android.R.color.transparent)
+        floatingUnlockButton.visibility = View.GONE
     }
 
     private fun enterImmersive() {
+        // 强化沉浸式全屏，尽力阻止下拉通知栏
+        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        @Suppress("DEPRECATION")
+        window.decorView.systemUiVisibility = (
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            or View.SYSTEM_UI_FLAG_FULLSCREEN
+            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        )
         val c = WindowInsetsControllerCompat(window, window.decorView)
         c.hide(WindowInsetsCompat.Type.systemBars())
         c.systemBarsBehavior =
@@ -198,6 +208,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun exitImmersive() {
+        window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        @Suppress("DEPRECATION")
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
         val c = WindowInsetsControllerCompat(window, window.decorView)
         c.show(WindowInsetsCompat.Type.systemBars())
     }
