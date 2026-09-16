@@ -11,7 +11,7 @@
 
     <LinearLayout
         android:id="@+id/toolbar"
-        android:layout_width="96dp"
+        android:layout_width="100dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:orientation="vertical"
@@ -57,36 +57,14 @@
             android:insetTop="0dp"
             android:insetBottom="0dp" />
 
-        <!-- 竖向滑块区域 -->
-        <FrameLayout
+        <!-- 竖向滑块，占据中间剩余空间 -->
+        <com.copyta.app.ScaleSliderView
+            android:id="@+id/scaleSlider"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp">
-
-            <com.copyta.app.RulerView
-                android:id="@+id/rulerView"
-                android:layout_width="30dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:visibility="gone" />
-
-            <com.copyta.app.VerticalSeekBar
-                android:id="@+id/scaleSeekBar"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_horizontal"
-                android:min="50"
-                android:max="300"
-                android:stepSize="10"
-                android:progress="100"
-                android:progressDrawable="@drawable/seekbar_progress"
-                android:thumb="@drawable/seekbar_thumb" />
-
-        </FrameLayout>
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp" />
 
         <View
             android:id="@+id/colorWhite"
