@@ -23,10 +23,11 @@
         android:clickable="true"
         android:focusable="true">
 
+        <!-- 高度增加到 110dp，给上方文字留空间 -->
         <com.copyta.app.ScaleSliderView
             android:id="@+id/scaleSlider"
             android:layout_width="match_parent"
-            android:layout_height="80dp"
+            android:layout_height="110dp"
             android:layout_marginBottom="16dp" />
 
         <LinearLayout
